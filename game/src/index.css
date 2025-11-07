@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply antialiased;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+}
+
+@layer components {
+  .stress-clock-segment {
+    transition: all 0.3s ease;
+  }
+
+  .stress-clock-segment.filled {
+    animation: pulse 0.5s ease-in-out;
+  }
+
+  .choice-button {
+    @apply px-6 py-4 rounded-lg border-2 transition-all duration-200;
+    @apply hover:scale-105 hover:shadow-lg active:scale-95;
+  }
+
+  .choice-button-trap {
+    @apply border-red-500/50 bg-red-900/20 hover:bg-red-900/40 hover:border-red-400;
+  }
+
+  .choice-button-rational {
+    @apply border-blue-500/50 bg-blue-900/20 hover:bg-blue-900/40 hover:border-blue-400;
+  }
+
+  .choice-button-skill {
+    @apply border-purple-500/50 bg-purple-900/20 hover:bg-purple-900/40 hover:border-purple-400;
+  }
+
+  .choice-button-neutral {
+    @apply border-gray-500/50 bg-gray-800/20 hover:bg-gray-800/40 hover:border-gray-400;
+  }
+
+  .fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+
+  .slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
