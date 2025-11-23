@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { GameState, RoleType, EventChoice, NPC } from '../types';
-import { ROLES } from '../data/roles';
+import { GameState, PlayableRoleType, EventChoice, NPC, NPCRoleType } from '../types';
+import { ROLES, NPC_ROLE_IDS, PLAYABLE_ROLES } from '../data/roles';
 import { selectEventsForAct } from '../data/events';
+import { GAME_CONFIG } from '../constants/gameConfig';
 
 interface GameStore extends GameState {
   // 核心操作
-  startGame: (playerRole: RoleType) => void;
+  startGame: (playerRole: PlayableRoleType) => void;
   makeChoice: (choice: EventChoice) => void;
   nextEvent: () => void;
   resetGame: () => void;
@@ -15,9 +16,24 @@ interface GameStore extends GameState {
   checkGameOver: () => void;
   saveToLocalStorage: () => void;
   loadFromLocalStorage: () => void;
+
+  // 连击奖励提示
+  lastStreakReward: number | null;
+  clearStreakReward: () => void;
 }
 
-const initialState: GameState = {
+// 根据HP自动计算NPC心理状态
+const getMentalStateFromHP = (hp: number, currentState: 'calm' | 'agitated' | 'panicked'): 'calm' | 'agitated' | 'panicked' => {
+  // HP很低时，心理状态自动恶化（只恶化不改善，避免覆盖事件设定的好状态）
+  if (hp <= 20) {
+    return 'panicked';
+  } else if (hp <= 40 && currentState === 'calm') {
+    return 'agitated';
+  }
+  return currentState;
+};
+
+const initialState: GameState & { lastStreakReward: number | null } = {
   phase: 'start',
   day: 1,
   playerRole: null,
@@ -29,6 +45,7 @@ const initialState: GameState = {
   currentEvent: null,
   cognitiveTraps: [],
   perfectDecisions: [],
+  perfectStreak: 0,
   inventory: {
     medkits: 1,
     food: 'plentiful',
@@ -36,27 +53,25 @@ const initialState: GameState = {
   flags: {},
   stressHistory: [0],
   ending: null,
+  lastStreakReward: null, // 用于显示连击奖励提示
 };
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...initialState,
 
-  startGame: (playerRole: RoleType) => {
-    const selectedRole = ROLES[playerRole];
+  startGame: (playerRole: PlayableRoleType) => {
+    const selectedRole = PLAYABLE_ROLES[playerRole];
     if (!selectedRole) return;
 
-    // 初始化NPCs（除了玩家选择的角色）
-    const npcs: NPC[] = Object.keys(ROLES)
-      .filter((roleId) => roleId !== playerRole)
-      .map((roleId) => ({
-        roleId: roleId as RoleType,
-        name: ROLES[roleId].name,
-        alive: true,
-        hp: ROLES[roleId].startingHP,
-        mentalState: 'calm',
-        relationship: 'neutral',
-        skillRevealed: false,
-      }));
+    // 初始化NPCs（固定4个NPC角色）
+    const npcs: NPC[] = NPC_ROLE_IDS.map((roleId: NPCRoleType) => ({
+      roleId,
+      alive: true,
+      hp: ROLES[roleId].startingHP,
+      mentalState: 'calm' as const,
+      relationship: 'neutral' as const,
+      skillRevealed: false,
+    }));
 
     set({
       ...initialState,
@@ -66,6 +81,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       playerHP: selectedRole.startingHP,
       npcs,
       stressHistory: [0],
+      perfectStreak: 0,
     });
 
     // 选择第一幕事件
@@ -112,39 +128,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((s) => {
       const newState = { ...s };
 
-      // 应用压力变化（阈值从12提高到15）
+      // 应用压力变化
       if (consequences.stress !== undefined) {
+        let stressChange = consequences.stress;
+
+        // 完美决策额外奖励：压力变化再-1
+        if (consequences.perfectDecision && stressChange < 0) {
+          stressChange -= GAME_CONFIG.PERFECT_DECISION_BONUS.EXTRA_STRESS_REDUCTION;
+        }
+
         newState.stressClock = Math.max(
           0,
-          Math.min(15, s.stressClock + consequences.stress)
+          Math.min(GAME_CONFIG.MAX_STRESS, s.stressClock + stressChange)
         );
         newState.stressHistory = [...s.stressHistory, newState.stressClock];
       }
 
-      // 应用玩家HP变化（HP不能超过初始值100）
+      // 应用玩家HP变化（HP不能超过角色初始值）
       if (consequences.playerHP !== undefined) {
-        const newHP = Math.max(0, Math.min(100, s.playerHP + consequences.playerHP));
+        // 获取角色的最大HP（根据角色不同，飞行员是90，其他是100）
+        const maxHP = s.playerRole ? (ROLES[s.playerRole]?.startingHP || GAME_CONFIG.MAX_PLAYER_HP) : GAME_CONFIG.MAX_PLAYER_HP;
+        const newHP = Math.max(GAME_CONFIG.MIN_HP, Math.min(maxHP, s.playerHP + consequences.playerHP));
         newState.playerHP = newHP;
 
         // 关键修复：HP归零自动触发死亡结局
-        if (newHP <= 0) {
+        if (newHP <= GAME_CONFIG.MIN_HP) {
           newState.ending = 'your_end';
           newState.phase = 'ending';
         }
       }
 
       // 应用NPC HP变化（HP不能超过初始值）
+      // 注意：这里不再单独处理NPC死亡的压力增加，统一在npcDeath处理
       if (consequences.npcHP) {
         newState.npcs = s.npcs.map((npc) => {
+          // 已死亡的NPC不再处理HP变化
+          if (!npc.alive) return npc;
+
           const hpChange = consequences.npcHP?.find(
             (h) => h.roleId === npc.roleId
           );
           if (hpChange) {
-            const maxHP = ROLES[npc.roleId]?.startingHP || 100;
-            const newHP = Math.max(0, Math.min(maxHP, npc.hp + hpChange.value));
+            const maxHP = ROLES[npc.roleId]?.startingHP || GAME_CONFIG.MAX_PLAYER_HP;
+            const newHP = Math.max(GAME_CONFIG.MIN_HP, Math.min(maxHP, npc.hp + hpChange.value));
 
-            // 关键修复：HP归零自动标记为死亡
-            if (newHP <= 0 && npc.alive) {
+            // HP归零自动标记为死亡
+            if (newHP <= GAME_CONFIG.MIN_HP) {
               return {
                 ...npc,
                 hp: 0,
@@ -160,14 +189,25 @@ export const useGameStore = create<GameStore>((set, get) => ({
           return npc;
         });
 
-        // NPC死亡额外增加压力（已有的逻辑保留）
-        const newDeaths = newState.npcs.filter((npc) => !npc.alive && s.npcs.find((old) => old.roleId === npc.roleId && old.alive));
-        if (newDeaths.length > 0) {
+        // 统计因HP归零而新死亡的NPC数量，增加压力
+        const newDeathsFromHP = newState.npcs.filter(
+          (npc) => !npc.alive && s.npcs.find((old) => old.roleId === npc.roleId && old.alive)
+        );
+        if (newDeathsFromHP.length > 0) {
           newState.stressClock = Math.min(
-            15, // 改为15以匹配新阈值
-            newState.stressClock + newDeaths.length * 2
+            GAME_CONFIG.MAX_STRESS,
+            newState.stressClock + newDeathsFromHP.length * GAME_CONFIG.NPC_DEATH_STRESS_PENALTY
           );
         }
+
+        // 根据HP变化自动更新心理状态
+        newState.npcs = newState.npcs.map((npc) => {
+          if (!npc.alive) return npc;
+          return {
+            ...npc,
+            mentalState: getMentalStateFromHP(npc.hp, npc.mentalState),
+          };
+        });
       }
 
       // 应用NPC状态变化
@@ -202,10 +242,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         });
       }
 
-      // 应用NPC死亡
+      // 应用NPC死亡（直接标记死亡，非HP归零导致）
       if (consequences.npcDeath) {
+        // 先统计实际会死亡的NPC数量（排除已经死亡的）
+        const actualNewDeaths = consequences.npcDeath.filter(
+          (roleId) => newState.npcs.find((npc) => npc.roleId === roleId && npc.alive)
+        );
+
         newState.npcs = newState.npcs.map((npc) => {
-          if (consequences.npcDeath?.includes(npc.roleId)) {
+          if (consequences.npcDeath?.includes(npc.roleId) && npc.alive) {
             return {
               ...npc,
               alive: false,
@@ -215,11 +260,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
           return npc;
         });
 
-        // NPC死亡额外增加压力（阈值改为15）
-        newState.stressClock = Math.min(
-          15,
-          newState.stressClock + consequences.npcDeath.length * 2
-        );
+        // 只对实际死亡的NPC增加压力（避免重复计算）
+        if (actualNewDeaths.length > 0) {
+          newState.stressClock = Math.min(
+            GAME_CONFIG.MAX_STRESS,
+            newState.stressClock + actualNewDeaths.length * GAME_CONFIG.NPC_DEATH_STRESS_PENALTY
+          );
+        }
       }
 
       // 应用信标进度变化
@@ -245,11 +292,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
             eventName: s.currentEvent.name,
             day: s.day,
             choice: choice.text,
+            choiceId: choice.id,
           },
         ];
       }
 
-      // 记录完美决策
+      // 记录完美决策并处理连击系统
       if (consequences.perfectDecision && s.currentEvent) {
         newState.perfectDecisions = [
           ...s.perfectDecisions,
@@ -258,8 +306,41 @@ export const useGameStore = create<GameStore>((set, get) => ({
             eventName: s.currentEvent.name,
             day: s.day,
             choice: choice.text,
+            choiceId: choice.id,
           },
         ];
+
+        // 增加连击数
+        newState.perfectStreak = s.perfectStreak + 1;
+
+        // 连击奖励系统
+        const newStreak = newState.perfectStreak;
+
+        if (newStreak === 3) {
+          // 3连击：全员+10HP
+          newState.playerHP = Math.min(100, newState.playerHP + 10);
+          newState.npcs = newState.npcs.map((npc) => ({
+            ...npc,
+            hp: npc.alive ? Math.min(ROLES[npc.roleId]?.startingHP || 100, npc.hp + 10) : npc.hp,
+          }));
+          (newState as typeof newState & { lastStreakReward: number | null }).lastStreakReward = 3;
+        } else if (newStreak === 5) {
+          // 5连击：压力-2
+          newState.stressClock = Math.max(0, newState.stressClock - 2);
+          (newState as typeof newState & { lastStreakReward: number | null }).lastStreakReward = 5;
+        } else if (newStreak === 7) {
+          // 7连击：信标+10%
+          if (typeof newState.beaconProgress === 'number') {
+            newState.beaconProgress = Math.min(100, newState.beaconProgress + 10);
+          }
+          (newState as typeof newState & { lastStreakReward: number | null }).lastStreakReward = 7;
+        } else {
+          (newState as typeof newState & { lastStreakReward: number | null }).lastStreakReward = null;
+        }
+      } else {
+        // 非完美决策（包括undefined和false），重置连击
+        newState.perfectStreak = 0;
+        (newState as typeof newState & { lastStreakReward: number | null }).lastStreakReward = null;
       }
 
       // 应用flags
@@ -284,6 +365,70 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((s) => ({ day: s.day + 1 }));
 
     const newDay = get().day;
+
+    // ========== 每日环境损耗（饥寒交迫）==========
+    set((s) => {
+      const envConfig = GAME_CONFIG.DAILY_ENVIRONMENTAL_DAMAGE;
+
+      // 计算今日损耗
+      let dailyDamage = envConfig.BASE_DAMAGE;
+
+      // 高压力额外损耗
+      if (s.stressClock >= envConfig.STRESS_DAMAGE_THRESHOLD) {
+        dailyDamage += envConfig.STRESS_EXTRA_DAMAGE;
+      }
+
+      // 后期物资耗尽额外损耗
+      if (newDay >= envConfig.LATE_GAME_START_DAY) {
+        dailyDamage += envConfig.LATE_GAME_BONUS;
+      }
+
+      // 应用损耗到玩家
+      const newPlayerHP = Math.max(GAME_CONFIG.MIN_HP, s.playerHP - dailyDamage);
+
+      // 应用损耗到所有存活NPC，同时更新心理状态
+      const newNPCs = s.npcs.map(npc => {
+        if (!npc.alive) return npc;
+        const newHP = Math.max(GAME_CONFIG.MIN_HP, npc.hp - dailyDamage);
+        // HP归零标记死亡
+        if (newHP <= GAME_CONFIG.MIN_HP) {
+          return { ...npc, hp: 0, alive: false };
+        }
+        // 根据新HP更新心理状态
+        return {
+          ...npc,
+          hp: newHP,
+          mentalState: getMentalStateFromHP(newHP, npc.mentalState),
+        };
+      });
+
+      // 统计因环境损耗死亡的NPC
+      const envDeaths = newNPCs.filter(
+        (npc) => !npc.alive && s.npcs.find((old) => old.roleId === npc.roleId && old.alive)
+      );
+
+      // 计算新压力（NPC死亡增加压力）
+      let newStress = s.stressClock;
+      if (envDeaths.length > 0) {
+        newStress = Math.min(
+          GAME_CONFIG.MAX_STRESS,
+          newStress + envDeaths.length * GAME_CONFIG.NPC_DEATH_STRESS_PENALTY
+        );
+      }
+
+      return {
+        playerHP: newPlayerHP,
+        npcs: newNPCs,
+        stressClock: newStress,
+        stressHistory: envDeaths.length > 0 ? [...s.stressHistory, newStress] : s.stressHistory,
+      };
+    });
+
+    // 检查玩家是否因环境损耗死亡
+    if (get().playerHP <= GAME_CONFIG.MIN_HP) {
+      set({ ending: 'your_end', phase: 'ending' });
+      return;
+    }
 
     // 确定当前幕（第1-3天=第一幕，第4-7天=第二幕，第8-10天=第三幕）
     let currentAct: 1 | 2 | 3;
@@ -321,39 +466,46 @@ export const useGameStore = create<GameStore>((set, get) => ({
   checkGameOver: () => {
     const state = get();
 
-    // 检查信标修复
-    if (state.beaconProgress === 100) {
-      set({
-        ending: 'rescue',
-        phase: 'ending',
-      });
+    // ========== 优先级1: 立即失败条件 ==========
+
+    // 检查背叛
+    if (state.flags['betrayal_escape']) {
+      set({ ending: 'your_end', phase: 'ending' });
       return;
     }
 
     // 检查玩家HP
-    if (state.playerHP <= 0) {
-      set({
-        ending: 'your_end',
-        phase: 'ending',
-      });
+    if (state.playerHP <= GAME_CONFIG.MIN_HP) {
+      set({ ending: 'your_end', phase: 'ending' });
       return;
     }
 
-    // 检查压力崩溃（阈值从12提高到15）
-    if (state.stressClock >= 15) {
-      set({
-        ending: 'collapse',
-        phase: 'ending',
-      });
+    // 检查压力崩溃
+    if (state.stressClock >= GAME_CONFIG.MAX_STRESS) {
+      set({ ending: 'collapse', phase: 'ending' });
       return;
     }
+
+    // ========== 优先级2: 成功条件 ==========
+
+    // 检查信标修复
+    if (typeof state.beaconProgress === 'number' &&
+        state.beaconProgress >= GAME_CONFIG.BEACON_RESCUE_THRESHOLD) {
+      set({ ending: 'rescue', phase: 'ending' });
+      return;
+    }
+
+    // ========== 优先级3: 时间耗尽 ==========
 
     // 检查是否到达第10天
-    if (state.day >= 10 && !state.currentEvent) {
-      set({
-        ending: 'bitter_victory',
-        phase: 'ending',
-      });
+    if (state.day >= GAME_CONFIG.GAME_DURATION_DAYS && !state.currentEvent) {
+      const allAlive = state.npcs.every((npc) => npc.alive);
+
+      if (allAlive) {
+        set({ ending: 'survival', phase: 'ending' });  // 全员存活 - 4星结局
+      } else {
+        set({ ending: 'bitter_victory', phase: 'ending' });  // 部分存活 - 3星结局
+      }
       return;
     }
   },
@@ -361,6 +513,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resetGame: () => {
     set(initialState);
     localStorage.removeItem('frozen_hope_save');
+  },
+
+  clearStreakReward: () => {
+    set({ lastStreakReward: null });
   },
 
   saveToLocalStorage: () => {
@@ -376,6 +532,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       completedEvents: state.completedEvents,
       cognitiveTraps: state.cognitiveTraps,
       perfectDecisions: state.perfectDecisions,
+      perfectStreak: state.perfectStreak,
       inventory: state.inventory,
       flags: state.flags,
       stressHistory: state.stressHistory,

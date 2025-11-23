@@ -1,8 +1,8 @@
 {
-  "name": "frozen-hope",
+  "name": "ceo-dilemma",
   "version": "1.0.0",
   "type": "module",
-  "description": "冰封希望：最终幸存者 - 认知心理学互动游戏",
+  "description": "CEO的抉择 - 探索认知偏误的商业决策模拟游戏",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

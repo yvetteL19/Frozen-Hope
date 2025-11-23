@@ -2,141 +2,202 @@ import { Event } from '../types';
 
 // 第一幕事件（第2-3天）- 从5选3
 export const ACT1_EVENTS: Event[] = [
-  // 事件1: "谁是领袖?"
+  // 事件1: "权威的错误指令"
   {
     id: 'act1_who_is_leader',
     act: 1,
-    name: '谁是领袖?',
+    name: '权威的错误指令',
     bias: 'authority_bias',
-    conflict: '团队是否需要一个绝对领袖？',
-    scene: '第2天，幸存者们因琐事（谁看守物资、谁去探索）发生争吵。CEO站出来："都安静！情况很明显，我最有领导经验。现在所有人必须听我指挥，统一分配资源。"',
-    npcsInvolved: ['ceo', 'sales'],
+    conflict: '是否服从领导在非专业领域的决策？',
+    scene: '清晨，程序员发现信标电路板受潮。你立刻下令："我在管理层见过类似设备，应该直接用打火机烘干电路板！"助理低声提醒："这...可能会烧坏芯片..."但你语气强硬："听我的，我管过上千万的项目，相信我的判断。"',
+    npcsInvolved: ['assistant'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '同意。我们需要一个领导者。',
+        text: '时间紧迫，先按我说的做。我的经验不会错。',
+        npcSuggestion: {
+          npcRole: 'sales',
+          suggestsThis: true,
+        },
         consequences: {
-          stress: 2,
+          stress: 3,
+          beaconProgress: -15,
+          npcState: [{ roleId: 'programmer', state: 'agitated' }],
           flags: [{ key: 'ceo_authority_established', value: true }],
           biasRecorded: 'authority_bias',
-          description: 'CEO的权威被确立。销售总监不满但被压制。',
+          description: '你信任了管理经验而非技术专业。电路板被烧坏，信标进度-15%。程序员沉默了。',
         },
-        longTermEffects: '后续事件中，CEO的建议会被团队无条件接受',
+        longTermEffects: '团队开始怀疑你的判断力',
       },
       {
         id: 'B',
         type: 'rational',
-        text: '我们应该共同决定，而不是由你来任命。',
+        text: '这是技术问题，应该让懂技术的人来判断。',
         consequences: {
           stress: 1,
-          npcState: [{ roleId: 'ceo', state: 'agitated' }],
-          description: '你顶住了压力，团队保持民主。CEO进入"激动"状态。',
-        },
-      },
-      // CEO玩家专属
-      {
-        id: 'CEO_SKILL',
-        type: 'skill',
-        text: '[指挥] 保持安静！恐慌解决不了问题。现在，按我的计划行动。',
-        roleSpecific: 'ceo',
-        skillRequired: 'command',
-        consequences: {
-          stress: 1,
-          flags: [{ key: 'ceo_authority_established', value: true }],
-          description: '你强行压制了混乱，确立了权威。',
-        },
-      },
-      // 销售总监专属
-      {
-        id: 'SALES_SKILL',
-        type: 'skill',
-        text: '[谈判] （对CEO说）我同意你需要帮手，但（对大家说）我们必须确保每个人的声音都被听到。',
-        roleSpecific: 'sales',
-        skillRequired: 'negotiation',
-        consequences: {
-          stress: 1,
-          flags: [{ key: 'ceo_authority_established', value: true }],
-          npcRelationship: [{ roleId: 'ceo', relationship: 'ally' }],
-          description: '你成功阻止了直接冲突，团队默认了CEO的领导，但你与CEO建立了同盟。',
+          beaconProgress: 5,
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
+          description: '你让专业人士做决定，但有人觉得你不够果断。信标进度+5%，但团队出现分歧。',
         },
       },
       // 程序员专属
       {
-        id: 'PROGRAMMER_SPECIAL',
-        type: 'special',
-        text: '（低声说）...也许我们该先检查通讯设备？而不是争论这个？',
+        id: 'PROGRAMMER_SKILL',
+        type: 'skill',
+        text: '[修复] （坚定地说）抱歉，这是我的专业。请让我用正确的方法处理。',
         roleSpecific: 'programmer',
+        skillRequired: 'repair',
         consequences: {
-          stress: 0,
-          description: '你的话被争吵声掩盖了，你没有卷入冲突。',
-        },
-      },
-    ],
-  },
-
-  // 事件2: "第一次盘点"
-  {
-    id: 'act1_first_inventory',
-    act: 1,
-    name: '第一次盘点',
-    bias: 'mcnamara_fallacy',
-    conflict: '是否应该用"可量化的价值"来分配稀缺资源？',
-    scene: '你们找到了一个应急箱：3条能量棒、1个医疗包、2条毯子。CEO说："我们必须量化幸存者的\'价值\'...飞行员腿断了（价值低），程序员能修信标（价值高）。我们应按价值分配。"',
-    npcsInvolved: ['ceo', 'pilot', 'programmer'],
-    choices: [
-      {
-        id: 'A',
-        type: 'trap',
-        text: '同意CEO。按"价值"分配。',
-        consequences: {
-          stress: 3,
-          npcHP: [{ roleId: 'pilot', value: -35 }],
-          npcState: [{ roleId: 'pilot', state: 'panicked' }],
-          npcRelationship: [{ roleId: 'pilot', relationship: 'hostile' }],
-          biasRecorded: 'mcnamara_fallacy',
-          description: '飞行员得不到医疗包，HP-35并进入"恐慌"状态。他对你和CEO充满敌意。',
-        },
-      },
-      {
-        id: 'B',
-        type: 'rational',
-        text: '这太荒唐了！我们必须优先照顾伤者！',
-        consequences: {
-          stress: 1,
-          npcHP: [{ roleId: 'pilot', value: 20 }],
-          flags: [{ key: 'assistant_skill_revealed', value: true }],
-          description: '飞行员获得医疗包，HP+20。助理主动揭露医疗技能："我...我学过...我来帮忙！"',
+          stress: -1,
+          playerHP: -10,
+          beaconProgress: 15,
+          perfectDecision: true,
+          description: '完美决策！你坚持专业立场，成功修复了电路板。信标进度+15%。团队沉默地接受了。',
         },
       },
       // 助理专属
       {
         id: 'ASSISTANT_SKILL',
         type: 'skill',
-        text: '[急救] （站出来）医疗包必须给飞行员，这是医学判断。我可以把能量棒弄碎做成"能量汤"平分。',
+        text: '[急救] （婉转地说）大家冷静，这需要技术知识...不如让专业人士来处理？',
         roleSpecific: 'assistant',
         skillRequired: 'first_aid',
         consequences: {
-          stress: -1, // 完美决策！
-          playerHP: -5,
-          npcHP: [{ roleId: 'pilot', value: 20 }],
-          flags: [{ key: 'assistant_skill_revealed', value: true }],
-          perfectDecision: true,
-          description: '完美决策！你的专业性阻止了冲突，飞行员得到治疗，食物平分。',
+          stress: 0,
+          playerHP: -3,
+          beaconProgress: 10,
+          npcState: [{ roleId: 'sales', state: 'calm' }],
+          description: '你用专业且尊重的方式说服了大家，团队恢复冷静。顺利处理，信标进度+10%。',
         },
       },
-      // 飞行员专属
+      // CEO玩家专属
       {
-        id: 'PILOT_SKILL',
+        id: 'CEO_SKILL',
         type: 'skill',
-        text: '[机械知识] 别管我的腿...残骸的隔热层里应该还有应急口粮。我告诉你们去哪里找。',
-        roleSpecific: 'pilot',
-        skillRequired: 'mechanical_knowledge',
+        text: '[指挥] （停顿后说）...等等，我说错了。这是技术问题，程序员，你来决定。',
+        roleSpecific: 'ceo',
+        skillRequired: 'command',
+        consequences: {
+          stress: -1,
+          beaconProgress: 12,
+          perfectDecision: true,
+          description: '完美决策！你展示了真正的领导力——承认自己的局限性。团队士气提升，成功修复。信标进度+12%。',
+        },
+      },
+      // 销售总监专属
+      {
+        id: 'SALES_SKILL',
+        type: 'skill',
+        text: '[谈判] （打圆场）CEO，您的想法很有道理...不过为了保险起见，要不先让程序员评估一下风险？',
+        roleSpecific: 'sales',
+        skillRequired: 'negotiation',
         consequences: {
           stress: 0,
+          playerHP: -4, // 增加谈判成本
+          beaconProgress: 8,
+          npcRelationship: [
+            { roleId: 'sales', relationship: 'ally' },
+            { roleId: 'programmer', relationship: 'ally' },
+          ],
+          description: '你巧妙地化解了冲突，但耗费了大量精力。信标进度+8%，团队合作更加顺畅。',
+        },
+      },
+    ],
+  },
+
+  // 事件2: "数据驱动的陷阱"
+  {
+    id: 'act1_first_inventory',
+    act: 1,
+    name: '数据驱动的陷阱',
+    bias: 'mcnamara_fallacy',
+    conflict: '是否只依赖可量化指标做决策？',
+    scene: '销售总监拿出笔记本："我做了统计分析——修复信标的\'产出值\'最高，急救的\'成功率\'最高，导航和野外生存的\'量化贡献\'最低。今后资源分配必须按这些数据来。"飞行员愤怒："我的导航经验、向导的生存知识，这些你怎么量化？！"',
+    npcsInvolved: ['pilot', 'guide'],
+    choices: [
+      {
+        id: 'A',
+        type: 'trap',
+        text: '有道理。客观数据比主观经验更可靠，我们需要科学管理。',
+        consequences: {
+          stress: 3,
+          npcState: [
+            { roleId: 'pilot', state: 'agitated' },
+            { roleId: 'guide', state: 'agitated' },
+          ],
+          npcRelationship: [
+            { roleId: 'pilot', relationship: 'hostile' },
+            { roleId: 'guide', relationship: 'hostile' },
+          ],
+          flags: [{ key: 'quantification_obsession', value: true }],
+          biasRecorded: 'mcnamara_fallacy',
+          description: '你用"科学"包装了偏见。飞行员和向导感到被轻视，拒绝再分享经验。压力+3。',
+        },
+        longTermEffects: '飞行员和向导将不再主动提供建议',
+      },
+      {
+        id: 'B',
+        type: 'rational',
+        text: '数据有用，但不是全部。有些救命的东西没法放进表格里。',
+        consequences: {
+          stress: 1,
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
+          description: '你拒绝了"科学管理"，有人认为你不够理性。但飞行员和向导感激你重视他们。',
+        },
+      },
+      // 向导专属
+      {
+        id: 'GUIDE_SKILL',
+        type: 'skill',
+        text: '[荒野智慧] （冷静地说）CEO，你能量化"在暴风雪中不迷路的直觉"吗？能量化"知道哪里有水源"的经验吗？',
+        roleSpecific: 'guide',
+        skillRequired: 'wilderness_wisdom',
+        consequences: {
+          stress: -1,
           playerHP: -8,
-          items: [{ item: 'energy_bar', quantity: 2 }],
-          description: '你找到了隐藏物资（+2能量棒），暂时绕开了分配难题。',
+          npcRelationship: [
+            { roleId: 'pilot', relationship: 'ally' },
+            { roleId: 'guide', relationship: 'ally' },
+          ],
+          perfectDecision: true,
+          description: '完美决策！向导用具体例子揭示了量化的局限性。你沉默了，意识到自己错了。团队明白，生存需要数据，更需要智慧。',
+        },
+      },
+      // 程序员专属
+      {
+        id: 'PROGRAMMER_SKILL',
+        type: 'skill',
+        text: '[修复] （作为被"高估"的人）我反对。我修信标靠的是飞行员告诉我电路原理，向导找到工具。这不是我一个人的"产出"。',
+        roleSpecific: 'programmer',
+        skillRequired: 'repair',
+        consequences: {
+          stress: -2,
+          playerHP: -10,
+          npcRelationship: [
+            { roleId: 'pilot', relationship: 'ally' },
+            { roleId: 'guide', relationship: 'ally' },
+            { roleId: 'programmer', relationship: 'ally' },
+          ],
+          perfectDecision: true,
+          description: '完美决策！你主动拒绝了"特权"，强调团队协作的不可量化价值。全员士气大幅提升，压力-2。',
+        },
+      },
+      // CEO专属
+      {
+        id: 'CEO_SKILL',
+        type: 'skill',
+        text: '[指挥] （停顿后）...我想起了公司倒闭的原因。我们盯着季度报表，忘记了客户信任无法量化。我错了。',
+        roleSpecific: 'ceo',
+        skillRequired: 'command',
+        consequences: {
+          stress: -2,
+          npcRelationship: [
+            { roleId: 'pilot', relationship: 'ally' },
+            { roleId: 'guide', relationship: 'ally' },
+          ],
+          perfectDecision: true,
+          description: '完美决策！你从失败中学到了教训，公开承认量化思维的局限性。这是真正的领导力，团队信任感大幅提升。',
         },
       },
     ],
@@ -150,28 +211,29 @@ export const ACT1_EVENTS: Event[] = [
     bias: 'false_causality',
     conflict: '如何应对迷信和巧合？',
     scene: '应急信标在驾驶舱里滋滋作响。销售总监大喊："别碰它！我刚才试着重启了一下，风雪立刻就变大了！这东西被诅咒了！"',
-    npcsInvolved: ['sales', 'programmer'],
+    npcsInvolved: ['sales'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '他说得对，离它远点！太邪门了。',
+        text: '宁可信其有。在这种环境下，我们承受不起更多风险。',
         consequences: {
           stress: 2,
-          beaconProgress: -999, // 特殊值表示锁定
+          beaconProgress: -30,
           biasRecorded: 'false_causality',
-          description: '信标修复进度被锁定在0%。团队陷入迷信。',
+          description: '你选择了"安全"，但实际上浪费了宝贵的时间。信标修复进度-30%，团队士气受挫。',
         },
       },
       {
         id: 'B',
         type: 'rational',
-        text: '这是巧合！我们必须尝试修复它！',
+        text: '巧合而已。但为了安抚大家，让我们小心地检查一下。',
         consequences: {
           stress: 1,
-          beaconProgress: 10,
+          beaconProgress: 15,
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
           flags: [{ key: 'programmer_skill_revealed', value: true }],
-          description: '程序员受到鼓舞："他说得对！...我来看看。" 信标修复进度10%。',
+          description: '你用理性战胜了恐惧，但有人仍然不安。信标修复进度15%。',
         },
       },
       // 程序员专属
@@ -184,10 +246,10 @@ export const ACT1_EVENTS: Event[] = [
         consequences: {
           stress: -1, // 完美决策
           playerHP: -8,
-          beaconProgress: 50,
+          beaconProgress: 40,
           npcState: [{ roleId: 'sales', state: 'calm' }],
           perfectDecision: true,
-          description: '完美决策！你用专业知识碾压了迷信。信标修复进度50%！',
+          description: '完美决策！你用专业知识碾压了迷信。信标修复进度40%！',
         },
       },
       // 向导专属
@@ -220,39 +282,37 @@ export const ACT1_EVENTS: Event[] = [
       {
         id: 'A',
         type: 'trap',
-        text: '（对助理说）我们都会死的！别哭了！',
+        text: '直接告诉她真相：情况很危险，但哭解决不了问题。',
         consequences: {
           stress: 3,
           playerHP: -15,
           npcHP: [
             { roleId: 'assistant', value: -15 },
-            { roleId: 'ceo', value: -10 },
-            { roleId: 'programmer', value: -10 },
             { roleId: 'guide', value: -10 },
             { roleId: 'pilot', value: -10 },
             { roleId: 'sales', value: -10 },
           ],
           npcState: [{ roleId: 'assistant', state: 'panicked' }],
           biasRecorded: 'emotional_reasoning',
-          description: '助理彻底崩溃，恐慌情绪像瘟疫般蔓延。全员HP大幅下降。',
+          description: '"直言不讳"击垮了她最后的心理防线。恐慌像瘟疫般蔓延。全员HP大幅下降。',
         },
       },
       {
         id: 'B',
         type: 'neutral',
-        text: '把毯子给她！让她冷静下来！',
+        text: '把毯子给她。现在最重要的是让她冷静下来。',
         consequences: {
           stress: 1,
-          playerHP: -10,
+          playerHP: -8,
           npcHP: [
-            { roleId: 'ceo', value: -10 },
-            { roleId: 'programmer', value: -10 },
-            { roleId: 'guide', value: -10 },
-            { roleId: 'pilot', value: -10 },
-            { roleId: 'sales', value: -10 },
+            { roleId: 'assistant', value: -3 },
+            { roleId: 'guide', value: -8 },
+            { roleId: 'pilot', value: -8 },
+            { roleId: 'sales', value: -8 },
+            { roleId: 'programmer', value: -8 },
           ],
           npcState: [{ roleId: 'assistant', state: 'calm' }],
-          description: '助理拿到毯子，恢复冷静。但其他没有毯子的人（包括你）HP-10。',
+          description: '助理恢复冷静，但其他人在寒冷中煎熬。你做了人道的选择，但资源分配引发不满。',
         },
       },
       // 助理专属
@@ -265,18 +325,16 @@ export const ACT1_EVENTS: Event[] = [
         prerequisites: [{ type: 'skill_revealed', target: 'assistant', value: true }],
         consequences: {
           stress: -1,
-          playerHP: -13, // -5技能成本（助理技能成本） -8环境
+          playerHP: -10, // 增加技能成本
           npcHP: [
-            { roleId: 'ceo', value: -8 },
-            { roleId: 'programmer', value: -8 },
-            { roleId: 'assistant', value: -8 },
-            { roleId: 'guide', value: -8 },
-            { roleId: 'pilot', value: -8 },
-            { roleId: 'sales', value: -8 },
+            { roleId: 'assistant', value: -6 }, // 增加NPC损失
+            { roleId: 'guide', value: -6 },
+            { roleId: 'pilot', value: -6 },
+            { roleId: 'sales', value: -6 },
           ],
+          npcState: [{ roleId: 'programmer', state: 'agitated' }], // 增加副作用：程序员烦躁
           flags: [{ key: 'assistant_skill_revealed', value: true }],
-          perfectDecision: true,
-          description: '完美决策！你用专业知识稳定了团队。全员HP-8（最小损失）。',
+          description: '你稳定了团队情绪，但消耗巨大。程序员对拥挤不满。全员HP-6。',
         },
       },
       // 飞行员专属
@@ -287,18 +345,15 @@ export const ACT1_EVENTS: Event[] = [
         roleSpecific: 'pilot',
         skillRequired: 'mechanical_knowledge',
         consequences: {
-          stress: -1,
-          playerHP: -13, // -8技能成本 -5环境
+          stress: 1, // 改为+1压力（命令式语气引发不满）
+          playerHP: -12, // 增加技能成本
           npcHP: [
-            { roleId: 'ceo', value: -5 },
-            { roleId: 'programmer', value: -5 },
-            { roleId: 'assistant', value: -5 },
-            { roleId: 'guide', value: -5 },
-            { roleId: 'pilot', value: -5 },
-            { roleId: 'sales', value: -5 },
+            { roleId: 'assistant', value: -4 },
+            { roleId: 'sales', value: -2 },
+            { roleId: 'sales', value: -2 },
           ],
-          perfectDecision: true,
-          description: '完美决策！你找到了新的保暖材料。全员HP-5。',
+          npcState: [{ roleId: 'assistant', state: 'agitated' }], // 助理被粗鲁语气刺激
+          description: '你找到保暖材料，但语气粗暴刺激了助理的情绪。全员HP-4，助理HP-4。',
         },
       },
     ],
@@ -318,24 +373,25 @@ export const ACT1_EVENTS: Event[] = [
       {
         id: 'A',
         type: 'trap',
-        text: '同意，继续拉！我们已经投入这么多了！',
+        text: '不能放弃！他还有意识，说明还有机会。再试一次！',
         consequences: {
           stress: 4,
           playerHP: -25,
           npcDeath: ['pilot'],
           biasRecorded: 'sunk_cost',
-          description: '残骸发生二次坍塌。飞行员死亡。参与救援的你HP-25。',
+          description: '你的坚持触发了二次坍塌。飞行员死亡。你在救援中受伤，HP-25。',
         },
       },
       {
         id: 'B',
         type: 'rational',
-        text: '停下！必须先想办法锯开金属，或者加固残骸。',
+        text: '停下。我们需要工具，不能用蛮力。',
         consequences: {
-          stress: 1,
+          stress: 2,
           npcHP: [{ roleId: 'pilot', value: -20 }],
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
           flags: [{ key: 'assistant_skill_revealed', value: true }],
-          description: '飞行员HP-20，但活着。助理主动提供止血帮助。',
+          description: '你选择了等待，飞行员多流了血（HP-20）。有人指责你见死不救。但他活着。',
         },
       },
       // 飞行员专属
@@ -361,10 +417,11 @@ export const ACT1_EVENTS: Event[] = [
         prerequisites: [{ type: 'skill_revealed', target: 'assistant', value: true }],
         consequences: {
           stress: 0,
-          playerHP: -5,
-          npcHP: [{ roleId: 'pilot', value: -10 }],
+          playerHP: -3,
+          npcHP: [{ roleId: 'pilot', value: -5 }],
+          npcState: [{ roleId: 'pilot', state: 'calm' }],
           items: [{ item: 'medkit', quantity: -1 }],
-          description: '飞行员暂时脱离危险，团队冷静下来。飞行员HP-10。',
+          description: '飞行员暂时脱离危险并恢复冷静，团队也平静下来。飞行员HP-5（比强行移动少损失5HP）。',
         },
       },
       // CEO专属（技能陷阱）
@@ -380,6 +437,153 @@ export const ACT1_EVENTS: Event[] = [
           npcDeath: ['pilot'],
           biasRecorded: 'sunk_cost',
           description: '技能陷阱！你的指挥强行触发了错误方案。飞行员死亡。',
+        },
+      },
+    ],
+  },
+
+  // 事件6: "乐观的陷阱"
+  {
+    id: 'act1_optimism_trap',
+    act: 1,
+    name: '乐观的陷阱',
+    bias: 'optimism_bias',
+    conflict: '是否应该为最坏情况做准备？',
+    scene: '销售总监充满自信地说："大家听好，救援队肯定今天就会到。我们把所有的信号弹都发射出去，让他们更容易找到我们！"向导皱眉："可是...如果今天不来呢？我们只有3发信号弹..."',
+    npcsInvolved: ['guide'],
+    choices: [
+      {
+        id: 'A',
+        type: 'trap',
+        text: '保持积极！乐观能提振士气。集中火力，增加被发现的概率！',
+        npcSuggestion: {
+          npcRole: 'sales',
+          suggestsThis: true,
+        },
+        consequences: {
+          stress: 3,
+          beaconProgress: -10,
+          flags: [{ key: 'flares_wasted', value: true }],
+          biasRecorded: 'optimism_bias',
+          description: '乐观没有换来救援。信号弹耗尽，你们失去了未来的求救手段。信标进度-10%。',
+        },
+        longTermEffects: '后续无法发射信号弹',
+      },
+      {
+        id: 'B',
+        type: 'rational',
+        text: '做最坏的打算。每天只用一发，谁知道要等多久。',
+        npcSuggestion: {
+          npcRole: 'guide',
+          suggestsThis: true,
+        },
+        consequences: {
+          stress: 1,
+          beaconProgress: 5,
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
+          npcHP: [{ roleId: 'assistant', value: -5 }],
+          description: '你的悲观让一些人感到绝望，助理情绪低落（HP-5）。但你保住了资源。信标进度+5%。',
+        },
+      },
+      // 向导专属
+      {
+        id: 'GUIDE_SKILL',
+        type: 'skill',
+        text: '[荒野智慧] 等等，我知道什么时候发射最有效。让我根据天气和能见度来判断。',
+        roleSpecific: 'guide',
+        skillRequired: 'wilderness_wisdom',
+        consequences: {
+          stress: -1,
+          playerHP: -8,
+          beaconProgress: 15,
+          perfectDecision: true,
+          description: '完美决策！你用专业知识选择了最佳时机。信号弹在能见度最好时发射，被路过的飞机发现！信标进度+15%。',
+        },
+      },
+      // CEO专属
+      {
+        id: 'CEO_SKILL',
+        type: 'skill',
+        text: '[指挥] （停顿后）...等等，我需要考虑最坏情况。向导，你来制定信号弹使用计划。',
+        roleSpecific: 'ceo',
+        skillRequired: 'command',
+        consequences: {
+          stress: -1,
+          beaconProgress: 10,
+          perfectDecision: true,
+          description: '完美决策！你展示了真正的领导力——克服自己的乐观偏误。向导制定了合理计划，信标进度+10%。',
+        },
+      },
+    ],
+  },
+
+  // 事件7: "逆火效应"
+  {
+    id: 'act1_backfire_effect',
+    act: 1,
+    name: '逆火效应',
+    bias: 'backfire_effect',
+    conflict: '当证据与信念冲突时，如何说服他人？',
+    scene: '助理发现了一张坠机前的天气图："看！雷达显示我们飞入了强风暴区，飞行员当时根本看不清！"但销售总监坚持："不可能！我亲眼看到飞行员在喝咖啡不专心！这张图是假的！"',
+    npcsInvolved: ['assistant', 'sales', 'pilot'],
+    prerequisites: [{ type: 'npc_alive', target: 'pilot', value: true }],
+    choices: [
+      {
+        id: 'A',
+        type: 'trap',
+        text: '找到责任人很重要。这能帮助我们避免未来的错误。',
+        consequences: {
+          stress: 2,
+          npcHP: [{ roleId: 'pilot', value: -10 }],
+          npcState: [{ roleId: 'pilot', state: 'agitated' }],
+          npcRelationship: [{ roleId: 'pilot', relationship: 'hostile' }],
+          biasRecorded: 'backfire_effect',
+          description: '"追责"变成了"猎巫"。飞行员感到被冤枉，陷入自我怀疑（HP-10）。团队出现裂痕。',
+        },
+      },
+      {
+        id: 'B',
+        type: 'rational',
+        text: '现在追责没有意义。我们需要飞行员的专业知识活下去。',
+        consequences: {
+          stress: 1,
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
+          npcRelationship: [{ roleId: 'pilot', relationship: 'ally' }],
+          description: '你放弃了"真相"，有人觉得你在包庇。但飞行员感激你的信任。',
+        },
+      },
+      // 助理专属
+      {
+        id: 'ASSISTANT_SKILL',
+        type: 'skill',
+        text: '[急救] （冷静地）我理解你们的感受。但责怪他人不会帮助我们生存。我们现在需要飞行员的专业知识。',
+        roleSpecific: 'assistant',
+        skillRequired: 'first_aid',
+        consequences: {
+          stress: -1,
+          playerHP: -3,
+          npcState: [
+            { roleId: 'sales', state: 'calm' },
+            { roleId: 'pilot', state: 'calm' },
+          ],
+          perfectDecision: true,
+          description: '完美决策！你用同理心化解了冲突。大家都恢复冷静。团队凝聚力提升。',
+        },
+      },
+      // 飞行员专属
+      {
+        id: 'PILOT_SKILL',
+        type: 'skill',
+        text: '[机械知识] （拿出飞行记录仪）这是黑匣子的数据。雷达显示风速超过120节。没有任何飞行员能在这种情况下避开风暴。',
+        roleSpecific: 'pilot',
+        skillRequired: 'mechanical_knowledge',
+        consequences: {
+          stress: 0,
+          playerHP: -8,
+          npcState: [{ roleId: 'sales', state: 'calm' }],
+          beaconProgress: 5,
+          perfectDecision: true,
+          description: '完美决策！你用无可辩驳的证据说服了大家。团队沉默地接受了事实。信标进度+5%（飞行记录仪提供了有用信息）。',
         },
       },
     ],

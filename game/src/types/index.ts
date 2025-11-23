@@ -1,6 +1,23 @@
 // ==================== 核心枚举类型 ====================
 
-export type RoleType = 'ceo' | 'programmer' | 'assistant' | 'guide' | 'pilot' | 'sales';
+// 可选角色（玩家可以扮演）- 简化为仅CEO
+export type PlayableRoleType = 'ceo';
+
+// NPC角色（固定为NPC）- 包含程序员
+export type NPCRoleType = 'programmer' | 'assistant' | 'guide' | 'pilot' | 'sales';
+
+// 所有角色类型
+export type RoleType = PlayableRoleType | NPCRoleType;
+
+// 角色显示名称映射
+export const ROLE_TITLES: Record<RoleType, { zh: string; en: string }> = {
+  ceo: { zh: 'CEO', en: 'CEO' },
+  programmer: { zh: '程序员', en: 'Programmer' },
+  assistant: { zh: '助理', en: 'Assistant' },
+  guide: { zh: '向导', en: 'Guide' },
+  pilot: { zh: '飞行员', en: 'Pilot' },
+  sales: { zh: '销售总监', en: 'Sales Director' },
+};
 
 export type MentalState = 'calm' | 'agitated' | 'panicked';
 
@@ -44,8 +61,6 @@ export type GamePhase =
 
 export interface Role {
   id: RoleType;
-  name: string;
-  age: number;
   occupation: string;
   description: string;
   personality: string;
@@ -69,8 +84,7 @@ export interface Skill {
 // ==================== NPC相关类型 ====================
 
 export interface NPC {
-  roleId: RoleType;
-  name: string;
+  roleId: NPCRoleType;
   alive: boolean;
   hp: number;
   mentalState: MentalState;
@@ -106,6 +120,10 @@ export interface EventChoice {
   roleSpecific?: RoleType;
   skillRequired?: string;
   prerequisites?: EventPrerequisite[];
+  npcSuggestion?: {
+    npcRole: RoleType;
+    suggestsThis: boolean; // true表示NPC建议这个选项，false表示反对
+  };
   consequences: EventConsequence;
   longTermEffects?: string;
 }
@@ -134,7 +152,7 @@ export interface GameState {
   day: number;
 
   // 玩家
-  playerRole: RoleType | null;
+  playerRole: PlayableRoleType | null;
   playerHP: number;
 
   // 核心指标
@@ -155,6 +173,7 @@ export interface GameState {
     eventName: string;
     day: number;
     choice: string;
+    choiceId: string;
   }[];
 
   // 完美决策记录
@@ -163,7 +182,11 @@ export interface GameState {
     eventName: string;
     day: number;
     choice: string;
+    choiceId: string;
   }[];
+
+  // 完美决策连击数
+  perfectStreak: number;
 
   // 物资
   inventory: {
@@ -217,7 +240,7 @@ export interface ReplayData {
   npcs: NPC[];
   playerFinalHP: number;
   beaconProgress: number | 'failed';
-  playerRole: RoleType;
+  playerRole: PlayableRoleType;
 }
 
 // ==================== 统计数据 ====================
@@ -226,11 +249,11 @@ export interface PlayerStats {
   totalGames: number;
   endingCounts: Record<EndingType, number>;
   trapCounts: Record<BiasType, number>;
-  roleUsage: Record<RoleType, number>;
-  npcSurvivalRates: Record<RoleType, number>;
+  roleUsage: Record<PlayableRoleType, number>;
+  npcSurvivalRates: Record<NPCRoleType, number>;
   averagePerfectDecisions: number;
   bestRun: {
-    role: RoleType;
+    role: PlayableRoleType;
     ending: EndingType;
     perfectDecisions: number;
     day: number;

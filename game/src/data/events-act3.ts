@@ -12,25 +12,27 @@ export const ACT3_EVENTS: Event[] = [
     prerequisites: [
       { type: 'beacon_progress', condition: '!=', value: 'failed' },
     ],
-    scene: '第8天。信标还是没反应。程序员说："我上次尝试时，它亮了0.5秒！我知道这次一定行，我只需要...更多电力！把取暖器的电池给我！"',
-    npcsInvolved: ['programmer'],
+    scene: '信标还是没反应。程序员说："我上次尝试时，它亮了0.5秒！我知道这次一定行，我只需要...更多电力！把取暖器的电池给我！"',
+    npcsInvolved: [],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '同意！我们把所有电力都给他！',
+        text: '它亮过！说明方向是对的。在这个阶段，我们必须孤注一掷。',
+        npcSuggestion: {
+          npcRole: 'pilot',
+          suggestsThis: true,
+        },
         consequences: {
           stress: 4,
           playerHP: -35,
           npcHP: [
-            { roleId: 'ceo', value: -35 },
-            { roleId: 'programmer', value: -35 },
             { roleId: 'assistant', value: -35 },
             { roleId: 'guide', value: -35 },
             { roleId: 'pilot', value: -35 },
             { roleId: 'sales', value: -35 },
           ],
-          beaconProgress: -999, // 失败锁定
+          beaconProgress: -999,
           biasRecorded: 'anchoring_effect',
           description: '信标短路，彻底报废。取暖器也停了。全员严重冻伤HP-35。',
         },
@@ -38,11 +40,16 @@ export const ACT3_EVENTS: Event[] = [
       {
         id: 'B',
         type: 'rational',
-        text: '不行！你这是在赌博！我们不能失去取暖器！',
+        text: '等等，0.5秒的亮光可能只是短路。我们不能冒这个险。',
+        npcSuggestion: {
+          npcRole: 'pilot',
+          suggestsThis: true,
+        },
         consequences: {
           stress: 1,
+          playerHP: -5,
           npcState: [{ roleId: 'programmer', state: 'agitated' }],
-          description: '信标进度保持不变。程序员进入"激动"。',
+          description: '你否定了"希望"，程序员很失望。信标进度保持不变，但你保住了取暖器。',
         },
       },
       // 程序员专属
@@ -55,9 +62,9 @@ export const ACT3_EVENTS: Event[] = [
         consequences: {
           stress: -1,
           playerHP: -8,
-          beaconProgress: 25,
+          beaconProgress: 30,
           perfectDecision: true,
-          description: '完美决策！你用专业知识否定了自己的错误锚定。信标修复进度+25%！',
+          description: '完美决策！你用专业知识否定了自己的错误锚定。信标修复进度+30%！',
         },
       },
       // 飞行员专属
@@ -71,16 +78,16 @@ export const ACT3_EVENTS: Event[] = [
         consequences: {
           stress: -1,
           playerHP: -8,
-          beaconProgress: 20,
+          beaconProgress: 25,
           perfectDecision: true,
-          description: '完美决策！你阻止了灾难。信标修复进度+20%。',
+          description: '完美决策！你阻止了灾难。信标修复进度+25%。',
         },
       },
       // CEO专属（技能陷阱）
       {
         id: 'CEO_SKILL_TRAP',
         type: 'skill',
-        text: '[指挥] （对程序员）我批准你的方案。执行吧。',
+        text: '[指挥] 我批准这个方案。执行吧。',
         roleSpecific: 'ceo',
         skillRequired: 'command',
         consequences: {
@@ -105,13 +112,13 @@ export const ACT3_EVENTS: Event[] = [
       { type: 'stress', condition: '>=', value: 5 },
       { type: 'npc_alive', target: 'sales', value: true },
     ],
-    scene: '第8天。压力时钟很高。销售总监秘密把你拉到一边："听着，这群人是累赘。我藏了一点食物和一条毯子。跟我走，我们俩有机会活下去。"',
+    scene: '压力时钟很高。销售总监秘密把你拉到一边："听着，这群人是累赘。我藏了一点食物和一条毯子。跟我走，我们俩有机会活下去。"',
     npcsInvolved: ['sales'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '好，我跟你走。',
+        text: '...你说得对。资源有限，只有最聪明的人才能活下来。',
         consequences: {
           biasRecorded: 'survivorship_bias',
           immediateEnding: 'your_end',
@@ -121,11 +128,11 @@ export const ACT3_EVENTS: Event[] = [
       {
         id: 'B',
         type: 'rational',
-        text: '你疯了！我不会丢下他们！',
+        text: '不。无论发生什么，我们要一起面对。',
         consequences: {
-          stress: 0,
+          stress: 1,
           npcRelationship: [{ roleId: 'sales', relationship: 'hostile' }],
-          description: '你拒绝了他。销售总监进入"敌对"状态。',
+          description: '你拒绝了他。销售总监进入"敌对"状态，可能在关键时刻背叛你。',
         },
       },
       // 销售总监专属
@@ -149,28 +156,28 @@ export const ACT3_EVENTS: Event[] = [
     name: '最后的守夜人',
     bias: 'availability_heuristic',
     conflict: '谁去守夜？',
-    scene: '第9天。暴风雪最猛烈的一夜。必须有一个人在残骸入口处守夜，防止积雪堵住房门。但守夜的人会暴露在风雪口，HP-50。CEO："让助理去吧。我刚才看到她睡得很好，她肯定最精神。"',
-    npcsInvolved: ['ceo', 'assistant'],
+    scene: '暴风雪最猛烈的一夜。必须有一个人在残骸入口处守夜，防止积雪堵住房门。但守夜的人会暴露在风雪口，HP-50。销售总监："让助理去吧。我刚才看到她睡得很好，她肯定最精神。"',
+    npcsInvolved: ['sales', 'assistant'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '同意。助理，你今晚守夜。',
+        text: '销售总监说得有道理。助理状态最好，应该由她来。',
         consequences: {
           stress: 4,
           npcDeath: ['assistant'],
           biasRecorded: 'availability_heuristic',
-          description: '助理因为发烧和寒冷，死在了守夜岗位上。',
+          description: '助理因为发烧和寒冷，死在了守夜岗位上。你基于片面印象做出了致命决定。',
         },
       },
       {
         id: 'B',
         type: 'rational',
-        text: '我们抽签决定。这最公平。',
+        text: '抽签决定。不能基于主观印象判断谁"最精神"。',
         consequences: {
           stress: 1,
-          playerHP: -50, // 简化：玩家抽中
-          description: '抽签决定。你被抽中，守夜HP-50。',
+          playerHP: -50,
+          description: '抽签决定。你被抽中，守夜HP-50。公平但痛苦。',
         },
       },
       // 飞行员专属
@@ -199,8 +206,6 @@ export const ACT3_EVENTS: Event[] = [
           stress: -1,
           playerHP: -18, // -8技能 -10轮流除雪
           npcHP: [
-            { roleId: 'ceo', value: -10 },
-            { roleId: 'programmer', value: -10 },
             { roleId: 'assistant', value: -10 },
             { roleId: 'guide', value: -10 },
             { roleId: 'pilot', value: -10 },
@@ -234,26 +239,26 @@ export const ACT3_EVENTS: Event[] = [
     bias: 'just_world_fallacy',
     conflict: '贡献大就该多得吗？',
     prerequisites: [{ type: 'day', condition: '>=', value: 9 }],
-    scene: '第9天。只剩下最后一块食物。销售总监把它拿在手里："这几天，我找的柴火最多，我贡献最大。飞行员和CEO一直在生病。根据\'公平\'，这块食物应该归我。"',
+    scene: '只剩下最后一块食物。销售总监把它拿在手里："这几天，我找的柴火最多，我贡献最大。飞行员和助理一直在生病。根据\'公平\'，这块食物应该归我。"',
     npcsInvolved: ['sales'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '...他说得对。食物归他。',
+        text: '按贡献分配资源是合理的。他确实付出最多。',
         consequences: {
           stress: 3,
           npcHP: [
-            { roleId: 'pilot', value: -15 },
-            { roleId: 'ceo', value: -15 },
-            { roleId: 'assistant', value: -15 },
             { roleId: 'programmer', value: -15 },
+            { roleId: 'pilot', value: -15 },
+            { roleId: 'assistant', value: -15 },
             { roleId: 'guide', value: -15 },
+            { roleId: 'sales', value: -15 },
           ],
           npcRelationship: [
             { roleId: 'pilot', relationship: 'hostile' },
-            { roleId: 'ceo', relationship: 'hostile' },
             { roleId: 'assistant', relationship: 'hostile' },
+            { roleId: 'programmer', relationship: 'hostile' },
           ],
           biasRecorded: 'just_world_fallacy',
           description: '团队因"公平"的自私而彻底分裂。其他人因饥饿HP-15，进入"敌对"。',
@@ -262,10 +267,11 @@ export const ACT3_EVENTS: Event[] = [
       {
         id: 'B',
         type: 'rational',
-        text: '我们说好平分的。这是最后一块，我们所有人分。',
+        text: '我们是一个团队。最后一块食物，所有人分。',
         consequences: {
-          stress: 0,
-          description: '食物被平分，虽然没人能吃饱，但团队的团结保持到了最后。',
+          stress: 1,
+          npcState: [{ roleId: 'sales', state: 'agitated' }],
+          description: '食物被平分，没人能吃饱。销售总监不满，但团队保持了团结。',
         },
       },
       // 助理专属
@@ -277,7 +283,7 @@ export const ACT3_EVENTS: Event[] = [
         skillRequired: 'first_aid',
         consequences: {
           stress: -1,
-          playerHP: -5,
+          playerHP: -3,
           perfectDecision: true,
           description: '完美决策！你提出了基于"需求"而非"贡献"的最高人道主义方案。',
         },
@@ -305,36 +311,34 @@ export const ACT3_EVENTS: Event[] = [
     bias: 'pattern_recognition',
     conflict: '在绝望中寻找希望？',
     prerequisites: [{ type: 'day', condition: '>=', value: 8 }],
-    scene: '第8天深夜。销售总监突然喊："听！是直升机的声音！"所有人都竖起耳朵。外面只有风声。她坚持："不，我确定我听到了引擎声！"',
+    scene: '深夜。销售总监突然喊："听！是直升机的声音！"所有人都竖起耳朵。外面只有风声。销售总监坚持："不，我确定我听到了引擎声！"',
     npcsInvolved: ['sales'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '冲出去挥手求救！点燃我们最后的信号弹！',
+        text: '这可能是我们最后的机会！就算只有一点希望也值得冒险！',
         consequences: {
-          stress: 4,
-          playerHP: -40,
+          stress: 3, // 降低压力
+          playerHP: -25, // 降低HP惩罚
           npcHP: [
-            { roleId: 'ceo', value: -40 },
-            { roleId: 'programmer', value: -40 },
-            { roleId: 'assistant', value: -40 },
-            { roleId: 'guide', value: -40 },
-            { roleId: 'pilot', value: -40 },
-            { roleId: 'sales', value: -40 },
+            { roleId: 'assistant', value: -25 },
+            { roleId: 'guide', value: -25 },
+            { roleId: 'pilot', value: -25 },
+            { roleId: 'sales', value: -25 },
           ],
           biasRecorded: 'pattern_recognition',
-          description: '在-40°C的暴风雪中冲出去，什么也没有。信号弹浪费，全员严重冻伤HP-40。',
+          description: '在暴风雪中冲出去，什么也没有。信号弹浪费，全员冻伤HP-25。',
         },
       },
       {
         id: 'B',
         type: 'rational',
-        text: '那只是风声。在绝望中，人会产生幻觉。',
+        text: '冷静。在这种风声中，人很容易产生幻听。',
         consequences: {
           stress: 1,
           npcState: [{ roleId: 'sales', state: 'panicked' }],
-          description: '你保持理性。销售总监崩溃，进入"恐慌"状态。',
+          description: '你打碎了销售总监的"希望"。他崩溃了，进入"恐慌"状态。',
         },
       },
       // 飞行员专属
@@ -375,13 +379,13 @@ export const ACT3_EVENTS: Event[] = [
       { type: 'stress', condition: '>=', value: 4 },
       { type: 'day', condition: '>=', value: 8 },
     ],
-    scene: '第8-9天。压力时钟已经很高。CEO突然对飞行员大吼："都是你！如果你飞得好一点，我们就不会坠机！"飞行员反击："你才是问题！你一直在瞎指挥！"团队在崩溃边缘。',
-    npcsInvolved: ['ceo', 'pilot'],
+    scene: '压力时钟已经很高。销售总监突然对飞行员大吼："都是你！如果你飞得好一点，我们就不会坠机！"飞行员反击："你才是问题！你一直在瞎指挥！"团队在崩溃边缘。',
+    npcsInvolved: ['sales', 'pilot'],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '同意CEO。飞行员确实有责任。',
+        text: '找出责任人很重要。飞行员是机长，他应该为坠机负责。',
         consequences: {
           stress: 3,
           npcHP: [{ roleId: 'pilot', value: -20 }],
@@ -393,10 +397,13 @@ export const ACT3_EVENTS: Event[] = [
       {
         id: 'B',
         type: 'rational',
-        text: '够了！事故不是任何人的错！现在互相指责只会让我们都死！',
+        text: '停！现在追究责任没有意义。我们需要团结。',
         consequences: {
-          stress: 0,
-          description: '团队暂时平息。虽然矛盾没解决，但至少保持了合作。',
+          stress: 1,
+          npcState: [
+            { roleId: 'sales', state: 'agitated' },
+          ],
+          description: '你压制了冲突，但销售总监觉得你在"和稀泥"。矛盾暂时平息，但怨气未消。',
         },
       },
       // 助理专属
@@ -408,13 +415,17 @@ export const ACT3_EVENTS: Event[] = [
         skillRequired: 'first_aid',
         consequences: {
           stress: -1,
-          playerHP: -5,
+          playerHP: -3,
           npcHP: [
-            { roleId: 'ceo', value: 10 },
-            { roleId: 'pilot', value: 10 },
+            { roleId: 'sales', value: 15 },
+            { roleId: 'pilot', value: 15 },
+          ],
+          npcState: [
+            { roleId: 'sales', state: 'calm' },
+            { roleId: 'pilot', state: 'calm' },
           ],
           perfectDecision: true,
-          description: '完美决策！你用同理心化解了冲突。两人HP+10。',
+          description: '完美决策！你用同理心化解了冲突，两人恢复冷静。销售总监和飞行员各恢复15HP。',
         },
       },
       // 销售总监专属
@@ -425,9 +436,9 @@ export const ACT3_EVENTS: Event[] = [
         roleSpecific: 'sales',
         skillRequired: 'negotiation',
         consequences: {
-          stress: -1,
-          perfectDecision: true,
-          description: '完美决策！你的情商挽救了团队。',
+          stress: 0, // 改为0压力
+          playerHP: -3, // 增加心理消耗
+          description: '你的情商挽救了团队，但消耗巨大。所有人暂时冷静。',
         },
       },
     ],
@@ -440,44 +451,40 @@ export const ACT3_EVENTS: Event[] = [
     name: '暴风雪加剧',
     bias: 'normalcy_bias',
     conflict: '是否低估了环境的危险？',
-    scene: '第8-9天。暴风雪突然加剧，残骸的一侧墙壁开始摇晃。温度降到-40°C。有人说："应该没事，它已经撑了这么久了..."',
+    scene: '暴风雪突然加剧，残骸的一侧墙壁开始摇晃。温度降到-40°C。销售总监说："应该没事，它已经撑了这么久了..."',
     npcsInvolved: [],
     choices: [
       {
         id: 'A',
         type: 'trap',
-        text: '应该能撑住。我们省点力气。',
+        text: '它已经撑了这么久了，应该没问题。大家都累了，省点力气。',
         consequences: {
-          stress: 4,
-          playerHP: -40,
+          stress: 3, // 降低压力
+          playerHP: -25, // 降低HP惩罚
           npcHP: [
-            { roleId: 'ceo', value: -40 },
-            { roleId: 'programmer', value: -40 },
-            { roleId: 'assistant', value: -40 },
-            { roleId: 'guide', value: -40 },
-            { roleId: 'pilot', value: -40 },
-            { roleId: 'sales', value: -40 },
+            { roleId: 'assistant', value: -25 },
+            { roleId: 'guide', value: -25 },
+            { roleId: 'pilot', value: -25 },
+            { roleId: 'sales', value: -25 },
           ],
           biasRecorded: 'normalcy_bias',
-          description: '墙壁部分坍塌！全员严重受伤，HP-40。',
+          description: '墙壁部分坍塌！全员受伤，HP-25。过去的稳定不代表未来的安全。',
         },
       },
       {
         id: 'B',
         type: 'rational',
-        text: '立刻加固！所有人行动！',
+        text: '不能冒险。立刻加固，所有人行动！',
         consequences: {
           stress: 1,
-          playerHP: -18,
+          playerHP: -15,
           npcHP: [
-            { roleId: 'ceo', value: -18 },
-            { roleId: 'programmer', value: -18 },
-            { roleId: 'assistant', value: -18 },
-            { roleId: 'guide', value: -18 },
-            { roleId: 'pilot', value: -18 },
-            { roleId: 'sales', value: -18 },
+            { roleId: 'assistant', value: -15 },
+            { roleId: 'guide', value: -15 },
+            { roleId: 'pilot', value: -15 },
+            { roleId: 'sales', value: -15 },
           ],
-          description: '及时加固避免了灾难，但劳累和寒冷导致全员-18HP。',
+          description: '在暴风雪中加固墙壁，全员精疲力竭（HP-15）。但避免了灾难。',
         },
       },
     ],
