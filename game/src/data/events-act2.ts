@@ -397,7 +397,7 @@ export const ACT2_EVENTS: Event[] = [
     bias: 'confirmation_bias',
     conflict: '是否加入自私阵营？',
     prerequisites: [{ type: 'npc_alive', target: 'sales', value: true }],
-    scene: '你发现销售总监在角落里鬼鬼祟祟。他藏了一小块巧克力。他低声说："嘘...CEO和飞行员都是累赘。你跟我合作，我们两个聪明人才能活下来。这块给你。"',
+    scene: '你在角落里发现销售总监在鬼鬼祟祟。他藏了一小块巧克力。他低声说："嘘...老板和飞行员都是累赘。你跟我合作，我们两个聪明人才能活下来。这块给你。"',
     npcsInvolved: ['sales'],
     choices: [
       {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { getAvailableChoices } from '../data/events';
 import { ROLES } from '../data/roles';
-import { getNPCStateWarning } from '../systems/npcBehavior';
+// NPC状态警告已禁用以增加游戏难度
 import { playSound, audioSystem } from '../systems/audioSystem';
 import { EventChoice } from '../types';
 import { useTranslation } from '../i18n';
@@ -297,14 +297,7 @@ export default function GamePlay() {
               }
             }
 
-            // 获取NPC建议和警告
-            let npcWarning = null;
-            if (choice.npcSuggestion) {
-              const suggestingNPC = npcs.find((npc) => npc.roleId === choice.npcSuggestion?.npcRole);
-              if (suggestingNPC) {
-                npcWarning = getNPCStateWarning(suggestingNPC);
-              }
-            }
+            // NPC状态警告已禁用（返回null）
 
             return (
               <div key={choice.id} className="space-y-2 choice-appear" style={{ animationDelay: `${index * 0.1}s` }}>
@@ -329,12 +322,6 @@ export default function GamePlay() {
                     )}
                   </div>
                 </button>
-                {/* NPC状态警告 */}
-                {npcWarning && (
-                  <div className="ml-2 sm:ml-4 px-3 py-2 bg-yellow-900/30 border border-yellow-700/50 rounded text-xs sm:text-sm text-yellow-300">
-                    {npcWarning}
-                  </div>
-                )}
               </div>
             );
           })}

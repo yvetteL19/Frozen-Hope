@@ -112,7 +112,7 @@ export const ACT3_EVENTS: Event[] = [
       { type: 'stress', condition: '>=', value: 5 },
       { type: 'npc_alive', target: 'sales', value: true },
     ],
-    scene: '压力时钟很高。销售总监秘密把你拉到一边："听着，这群人是累赘。我藏了一点食物和一条毯子。跟我走，我们俩有机会活下去。"',
+    scene: '压力时钟很高。销售总监似乎想和你单独谈谈。他小声说："听着，这群人是累赘。我藏了一点食物和一条毯子。跟我走，我们俩有机会活下去。"',
     npcsInvolved: ['sales'],
     choices: [
       {
@@ -156,7 +156,7 @@ export const ACT3_EVENTS: Event[] = [
     name: '最后的守夜人',
     bias: 'availability_heuristic',
     conflict: '谁去守夜？',
-    scene: '暴风雪最猛烈的一夜。必须有一个人在残骸入口处守夜，防止积雪堵住房门。但守夜的人会暴露在风雪口，HP-50。销售总监："让助理去吧。我刚才看到她睡得很好，她肯定最精神。"',
+    scene: '暴风雪最猛烈的一夜。必须有一个人在残骸入口处守夜，防止积雪堵住房门。但守夜的人会暴露在风雪口，HP-50。销售总监："让助理去吧。她看起来状态不错。"',
     npcsInvolved: ['sales', 'assistant'],
     choices: [
       {

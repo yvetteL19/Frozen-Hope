@@ -26,8 +26,8 @@ export const act1EventTranslations: Record<string, EventTranslation> = {
       en: 'Should you follow a leader\'s decision outside their expertise?',
     },
     scene: {
-      zh: '清晨，程序员发现信标电路板受潮。你立刻下令："我在管理层见过类似设备，应该直接用打火机烘干电路板！"助理低声提醒："这...可能会烧坏芯片..."但你语气强硬："听我的，我管过上千万的项目，相信我的判断。"',
-      en: 'Morning. The programmer discovers the beacon circuit board is wet. You immediately order: "I\'ve seen similar equipment in management, we should directly dry the circuit board with a lighter!" The assistant quietly warns: "This... might burn the chips..." But you insist: "Listen to me, I\'ve managed projects worth tens of millions, trust my judgment."',
+      zh: '清晨，程序员发现信标电路板受潮。他犹豫地说："这...可能需要专业处理..."你自信地说："我在管理层见过类似设备，应该直接用打火机烘干电路板！"助理低声提醒："这...可能会烧坏芯片..."但你语气强硬："听我的，我管过上千万的项目，相信我的判断。"',
+      en: 'Morning. The programmer discovers the beacon circuit board is wet. He hesitates: "This... might need professional handling..." You say confidently: "I\'ve seen similar equipment in management, we should directly dry the circuit board with a lighter!" The assistant quietly warns: "This... might burn the chips..." But you insist: "Listen to me, I\'ve managed projects worth tens of millions, trust my judgment."',
     },
     choices: {
       A: {
@@ -127,12 +127,12 @@ export const act1EventTranslations: Record<string, EventTranslation> = {
       },
       CEO_SKILL: {
         text: {
-          zh: '[指挥] （停顿后）...我想起了公司倒闭的原因。我们盯着季度报表，忘记了客户信任无法量化。我错了。',
-          en: '[Command] (After a pause) ...I remember why our company failed. We focused on quarterly reports, forgetting customer trust can\'t be quantified. I was wrong.',
+          zh: '[指挥] （冷静地）数据很重要，但忽视团队的经验和直觉同样是错误的。我们需要平衡。',
+          en: '[Command] (Calmly) Data is important, but ignoring team experience and intuition is also wrong. We need balance.',
         },
         description: {
-          zh: '完美决策！你从失败中学到了教训，公开承认量化思维的局限性。这是真正的领导力，团队信任感大幅提升。',
-          en: 'Perfect decision! You learned from failure and publicly admitted the limitations of quantitative thinking. This is true leadership, team trust significantly improved.',
+          zh: '完美决策！你展现了真正的领导力——在数据与经验之间找到平衡。飞行员和向导感激你的理解。',
+          en: 'Perfect decision! You showed true leadership - finding balance between data and experience. The pilot and guide appreciate your understanding.',
         },
       },
     },
@@ -604,8 +604,8 @@ export const act2EventTranslations: Record<string, EventTranslation> = {
       en: 'Should you join the selfish faction?',
     },
     scene: {
-      zh: '你发现销售总监在角落里鬼鬼祟祟。他藏了一小块巧克力。他低声说："嘘...CEO和飞行员都是累赘。你跟我合作，我们两个聪明人才能活下来。这块给你。"',
-      en: 'You catch the Sales Director acting suspicious in a corner. He\'s hidden a small piece of chocolate. He whispers: "Shh... The CEO and pilot are dead weight. Work with me, only us two smart people can survive. This is for you."',
+      zh: '你在角落里发现销售总监在鬼鬼祟祟。他藏了一小块巧克力。他低声说："嘘...老板和飞行员都是累赘。你跟我合作，我们两个聪明人才能活下来。这块给你。"',
+      en: 'You catch the Sales Director acting suspicious in a corner. He\'s hidden a small piece of chocolate. He whispers: "Shh... The boss and pilot are dead weight. Work with me, only us two smart people can survive. This is for you."',
     },
     choices: {
       A: {
@@ -1259,8 +1259,8 @@ export const act3EventTranslations: Record<string, EventTranslation> = {
       en: 'Should you abandon the team?',
     },
     scene: {
-      zh: '压力时钟很高。销售总监秘密把你拉到一边："听着，这群人是累赘。我藏了一点食物和一条毯子。跟我走，我们俩有机会活下去。"',
-      en: 'Stress is high. The Sales Director secretly pulls you aside: "Listen, these people are dead weight. I\'ve hidden some food and a blanket. Come with me, the two of us have a chance to survive."',
+      zh: '压力时钟很高。销售总监似乎想和你单独谈谈。他小声说："听着，这群人是累赘。我藏了一点食物和一条毯子。跟我走，我们俩有机会活下去。"',
+      en: 'Stress is high. The Sales Director seems to want to talk to you privately. He whispers: "Listen, these people are dead weight. I\'ve hidden some food and a blanket. Come with me, the two of us have a chance to survive."',
     },
     choices: {
       A: {
@@ -1306,8 +1306,8 @@ export const act3EventTranslations: Record<string, EventTranslation> = {
       en: 'Who keeps watch?',
     },
     scene: {
-      zh: '暴风雪最猛烈的一夜。必须有一个人在残骸入口处守夜，防止积雪堵住房门。但守夜的人会暴露在风雪口，HP-50。销售总监："让助理去吧。我刚才看到她睡得很好，她肯定最精神。"',
-      en: 'The most intense night of the blizzard. Someone must keep watch at the wreckage entrance to prevent snow from blocking the door. But the watchman will be exposed to the wind, HP -50. Sales Director: "Let the assistant go. I just saw her sleeping well, she must be the most energetic."',
+      zh: '暴风雪最猛烈的一夜。必须有一个人在残骸入口处守夜，防止积雪堵住房门。但守夜的人会暴露在风雪口，HP-50。销售总监："让助理去吧。她看起来状态不错。"',
+      en: 'The most intense night of the blizzard. Someone must keep watch at the wreckage entrance to prevent snow from blocking the door. But the watchman will be exposed to the wind, HP -50. Sales Director: "Let the assistant go. She looks in good condition."',
     },
     choices: {
       A: {
